@@ -1,8 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { SafeAreaView, StyleSheet, Text, View, ScrollView, Image, ActivityIndicator } from "react-native";
+import {
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  Image,
+  ActivityIndicator,
+  TouchableOpacity,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
 
 const HomeScreen = () => {
+  const navigation = useNavigation();
   const [accessToken, setAccessToken] = useState(null);
   const [loading, setLoading] = useState(true);
   const [topTracks, setTopTracks] = useState([]);
@@ -16,13 +27,16 @@ const HomeScreen = () => {
           setAccessToken(token);
 
           // Fetch top tracks
-          const response = await fetch("https://api.spotify.com/v1/me/top/tracks?limit=30", {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          });
+          const response = await fetch(
+            "https://api.spotify.com/v1/me/top/tracks?limit=50",
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
 
           if (!response.ok) {
             throw new Error("Failed to fetch top tracks");
@@ -41,6 +55,11 @@ const HomeScreen = () => {
     fetchData();
   }, []);
 
+  // Function to handle when a track is selected
+  const handleTrackPress = (track) => {
+    navigation.navigate("Player", { track });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.screen}>
@@ -50,16 +69,23 @@ const HomeScreen = () => {
         ) : (
           <ScrollView contentContainerStyle={styles.tracksContainer}>
             {topTracks.map((track, index) => (
-              <View key={index} style={styles.trackItem}>
-                <Image
-                  source={{ uri: track.album.images[0].url }}
-                  style={styles.trackImage}
-                />
-                <View style={styles.trackInfo}>
-                  <Text style={styles.trackName}>{track.name}</Text>
-                  <Text style={styles.trackArtists}>{track.artists.map(artist => artist.name).join(", ")}</Text>
+              <TouchableOpacity
+                key={index}
+                onPress={() => handleTrackPress(track)}
+              >
+                <View style={styles.trackItem}>
+                  <Image
+                    source={{ uri: track.album.images[0].url }}
+                    style={styles.trackImage}
+                  />
+                  <View style={styles.trackInfo}>
+                    <Text style={styles.trackName}>{track.name}</Text>
+                    <Text style={styles.trackArtists}>
+                      {track.artists.map((artist) => artist.name).join(", ")}
+                    </Text>
+                  </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             ))}
           </ScrollView>
         )}
@@ -84,17 +110,18 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   tracksContainer: {
-    alignItems: "center",
+    alignItems: 'flex-start',
   },
   trackItem: {
     flexDirection: "row",
-    alignItems: "center",
     marginBottom: 20,
+    width: "100%",
   },
   trackImage: {
     width: 50,
     height: 50,
     marginRight: 10,
+    borderRadius: 5,
   },
   trackInfo: {
     flex: 1,
