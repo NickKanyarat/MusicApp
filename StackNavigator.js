@@ -76,11 +76,11 @@ function BottomTabs() {
         }}
       />
       <Tab.Screen
-        name="Music"
+        name="Player"
         component={MplayerScreen}
         options={{
           tabBarLabel: ({ focused, color }) => (
-            <Text style={{ color: focused ? "black" : "white" }}>Music</Text>
+            <Text style={{ color: focused ? "black" : "white" }}>Player</Text>
           ),
           headerShown: false,
           tabBarLabelStyle: { color: "white" },
@@ -151,7 +151,7 @@ function Navigation() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="Music"
+          name="Player"
           component={MplayerScreen}
           options={{ headerShown: false }}
         />
