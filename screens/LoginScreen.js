@@ -21,6 +21,10 @@ const LoginScreen = () => {
         "playlist-modify-public",
         "user-read-private",
         "user-read-playback-state",
+        "user-modify-playback-state",
+        "user-read-currently-playing",
+        "playlist-read-private",
+        "user-top-read",
       ],
       usePKCE: false,
       redirectUri: "exp://localhost:8081/--/spotify-auth-callback",
@@ -53,14 +57,14 @@ const LoginScreen = () => {
           );
 
           const tokenData = await tokenResponse.json();
-          console.log("Token data:", tokenData); // ตรวจสอบค่าที่ได้รับมา
+          console.log("Token data:", tokenData);
 
           const accessToken = tokenData.access_token;
 
           if (accessToken) {
-            console.log("Access token:", accessToken); // ตรวจสอบว่ามี access_token หรือไม่
+            console.log("Access token:", accessToken);
             await AsyncStorage.setItem("accessToken", accessToken);
-            navigation.navigate("Main");
+            navigation.navigate("Main", { accessToken: accessToken });
           } else {
             console.error("Access token is undefined or null");
           }
@@ -103,7 +107,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 20,
     backgroundColor: "black",
   },
 });
