@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,31 +6,109 @@ import {
   Image,
   StyleSheet,
   SafeAreaView,
+  Alert, // เพิ่ม Alert เข้ามา
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { AntDesign } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const MplayerScreen = ({ route }) => {
   const { track } = route.params;
   const [isPlaying, setIsPlaying] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
   const navigation = useNavigation();
+  const [accessToken, setAccessToken] = useState(null);
 
-  const togglePlayback = () => {
-    setIsPlaying(!isPlaying);
-    // เรียกใช้ API หรือโค้ดเพื่อควบคุมการเล่นเพลงในแอปของคุณ
+  useEffect(() => {
+    const fetchAccessToken = async () => {
+      const token = await AsyncStorage.getItem("accessToken");
+      if (token) {
+        setAccessToken(token);
+      } else {
+        navigation.navigate("Login");
+      }
+    };
+
+    fetchAccessToken();
+  }, []);
+
+  const togglePlayback = async () => {
+    if (!accessToken) {
+      navigation.navigate("Login");
+      return;
+    }
+
+    try {
+      if (isPlaying) {
+        setIsPlaying(false);
+        await pausePlayback();
+      } else {
+        setIsPlaying(true);
+        await startPlayback();
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to toggle playback.");
+      console.error("Failed to toggle playback:", error);
+    }
   };
 
-  const playNextTrack = () => {
-    // โค้ดเพิ่มเพื่อเปลี่ยนเพลงถัดไปในแอปของคุณ
+  const startPlayback = async () => {
+    try {
+      const response = await fetch("https://api.spotify.com/v1/me/player/play", {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          uris: [track.uri],
+        }),
+      });
+  
+      if (response.ok) {
+        console.log("Playback started successfully.");
+      } else {
+        console.error("Failed to start playback:", response.status);
+        Alert.alert("Error", "Failed to start playback.");
+      }
+    } catch (error) {
+      console.error("Error starting playback:", error);
+      Alert.alert("Error", "Failed to start playback.");
+    }
+  };
+  
+  const pausePlayback = async () => {
+    try {
+      const response = await fetch("https://api.spotify.com/v1/me/player/pause", {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+  
+      if (response.ok) {
+        console.log("Playback paused successfully.");
+      } else {
+        console.error("Failed to pause playback:", response.status);
+        Alert.alert("Error", "Failed to pause playback.");
+      }
+    } catch (error) {
+      console.error("Error pausing playback:", error);
+      Alert.alert("Error", "Failed to pause playback.");
+    }
   };
 
-  const playPreviousTrack = () => {
-    // โค้ดเพิ่มเพื่อเปลี่ยนเพลงก่อนหน้าในแอปของคุณ
+  const playNextTrack = async () => {
+    // Add code to play the next track
   };
 
-  const onSliderValueChange = (value) => {
+  const playPreviousTrack = async () => {
+    // Add code to play the previous track
+  };
+
+  const onSliderValueChange = async (value) => {
     setSliderValue(value);
     // Add code to control the position of the track
   };
