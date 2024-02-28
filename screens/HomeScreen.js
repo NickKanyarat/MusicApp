@@ -21,30 +21,17 @@ const HomeScreen = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Get access token from AsyncStorage
         const token = await AsyncStorage.getItem("accessToken");
         if (token) {
           setAccessToken(token);
+          fetchTopTracks(token);
 
-          // Fetch top tracks
-          const response = await fetch(
-            "https://api.spotify.com/v1/me/top/tracks?limit=50",
-            {
-              method: "GET",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
+          // Polling ให้ดึงข้อมูลเพลงใหม่ทุกๆ 1 นาที
+          const interval = setInterval(() => {
+            fetchTopTracks(token);
+          }, 60000);
 
-          if (!response.ok) {
-            throw new Error("Failed to fetch top tracks");
-          }
-
-          const data = await response.json();
-          setTopTracks(data.items);
-          setLoading(false);
+          return () => clearInterval(interval);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -54,6 +41,32 @@ const HomeScreen = () => {
 
     fetchData();
   }, []);
+
+  const fetchTopTracks = async (token) => {
+    try {
+      const response = await fetch(
+        "https://api.spotify.com/v1/me/top/tracks?limit=30",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch top tracks");
+      }
+
+      const data = await response.json();
+      setTopTracks(data.items);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setLoading(false);
+    }
+  };
 
   // Function to handle when a track is selected
   const handleTrackPress = (track) => {
@@ -110,7 +123,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   tracksContainer: {
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
   },
   trackItem: {
     flexDirection: "row",
@@ -129,6 +142,7 @@ const styles = StyleSheet.create({
   trackName: {
     color: "white",
     fontSize: 18,
+    fontWeight: "600",
   },
   trackArtists: {
     color: "lightgray",
