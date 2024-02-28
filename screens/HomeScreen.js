@@ -8,6 +8,7 @@ import {
   Image,
   ActivityIndicator,
   TouchableOpacity,
+  Alert, // เพิ่ม Alert เข้ามา
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
@@ -25,17 +26,15 @@ const HomeScreen = () => {
         if (token) {
           setAccessToken(token);
           fetchTopTracks(token);
-
-          // Polling ให้ดึงข้อมูลเพลงใหม่ทุกๆ 1 นาที
           const interval = setInterval(() => {
             fetchTopTracks(token);
           }, 60000);
-
           return () => clearInterval(interval);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
         setLoading(false);
+        Alert.alert("Error", "Failed to fetch data."); // เพิ่มการแจ้งเตือนเมื่อเกิดข้อผิดพลาด
       }
     };
 
@@ -65,10 +64,10 @@ const HomeScreen = () => {
     } catch (error) {
       console.error("Error fetching data:", error);
       setLoading(false);
+      Alert.alert("Error", "Failed to fetch top tracks."); // เพิ่มการแจ้งเตือนเมื่อเกิดข้อผิดพลาด
     }
   };
 
-  // Function to handle when a track is selected
   const handleTrackPress = (track) => {
     navigation.navigate("Player", { track });
   };
