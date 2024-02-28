@@ -87,7 +87,7 @@ const LoginScreen = () => {
           WELCOME
         </Text>
 
-        <View style={{ marginTop: 30, alignItems: "" }}>
+        <View style={styles.buttonContainer}>
           <Button
             disabled={!request}
             title="Login"
@@ -108,6 +108,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "black",
+  },
+  buttonContainer: {
+    marginTop: 30,
+    borderRadius: 20,
+    overflow: "hidden",
+    width: 200,
+    backgroundColor: "purple",
+    alignSelf: "center",
   },
 });
 
