@@ -97,23 +97,26 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: "bold",
     marginBottom: 20,
+    textAlign: "center",
   },
   profileInfo: {
     alignItems: "center",
   },
   labelContainer: {
-    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    flexDirection: "row",
+    marginBottom: 20,
   },
   label: {
     color: "lightgray",
     fontSize: 18,
     marginRight: 5,
+    fontWeight: "600",
   },
   value: {
     color: "white",
     fontSize: 18,
+    fontWeight: "normal",
   },
   profileImage: {
     width: 100,
