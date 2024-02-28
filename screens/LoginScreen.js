@@ -23,6 +23,7 @@ const LoginScreen = () => {
         "user-read-playback-state",
         "user-modify-playback-state",
         "user-read-currently-playing",
+        "user-read-recently-played",
         "playlist-read-private",
         "user-top-read",
       ],
@@ -60,13 +61,21 @@ const LoginScreen = () => {
           console.log("Token data:", tokenData);
 
           const accessToken = tokenData.access_token;
+          const refreshToken = tokenData.refresh_token; // เก็บ refresh token ไว้
 
-          if (accessToken) {
+          if (accessToken && refreshToken) {
             console.log("Access token:", accessToken);
+            console.log("Refresh token:", refreshToken);
+
             await AsyncStorage.setItem("accessToken", accessToken);
+            await AsyncStorage.setItem("refreshToken", refreshToken);
+
             navigation.navigate("Main", { accessToken: accessToken });
+
+            // เรียกใช้ฟังก์ชัน setupTokenRefresh เพื่อตั้งเวลาในการ refresh token
+            setupTokenRefresh();
           } else {
-            console.error("Access token is undefined or null");
+            console.error("Access token or refresh token is undefined or null");
           }
         } catch (error) {
           console.error(
@@ -79,6 +88,52 @@ const LoginScreen = () => {
 
     handleResponse();
   }, [response, navigation]);
+
+  // 3. การใช้ refresh token เพื่อขอ access token ใหม่
+  const refreshToken = async () => {
+    try {
+      const refreshToken = await AsyncStorage.getItem("refreshToken");
+      if (!refreshToken) {
+        console.error("Refresh token not found");
+        return;
+      }
+
+      const refreshTokenResponse = await fetch(
+        "https://accounts.spotify.com/api/token",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            grant_type: "refresh_token",
+            refresh_token: refreshToken, // ใช้ refresh token เพื่อขอ access token ใหม่
+            client_id: "1dc7e39c7d6245deaee8177099bcfd60",
+            client_secret: "ba10ac5222f94e1bb020bb8f38d1c860",
+          }).toString(),
+        }
+      );
+
+      const refreshTokenData = await refreshTokenResponse.json();
+      console.log("Refresh token data:", refreshTokenData);
+
+      const newAccessToken = refreshTokenData.access_token;
+      if (newAccessToken) {
+        console.log("New access token:", newAccessToken);
+        await AsyncStorage.setItem("accessToken", newAccessToken);
+      } else {
+        console.error("New access token is undefined or null");
+      }
+    } catch (error) {
+      console.error("Error refreshing token:", error);
+    }
+  };
+
+  // ฟังก์ชัน setupTokenRefresh เพื่อตั้งเวลาในการ refresh token
+  const setupTokenRefresh = () => {
+    const refreshInterval = setInterval(refreshToken, 3600000); // ตั้งเวลาให้ refresh token ทุกชั่วโมง
+    return () => clearInterval(refreshInterval);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
