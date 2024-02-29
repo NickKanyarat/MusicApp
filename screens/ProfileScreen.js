@@ -6,12 +6,15 @@ import {
   View,
   Image,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
 
 const ProfileScreen = () => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,6 +48,18 @@ const ProfileScreen = () => {
     fetchData();
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      // Remove access token and refresh token from AsyncStorage
+      await AsyncStorage.removeItem("accessToken");
+      await AsyncStorage.removeItem("refreshToken");
+      // Navigate to the login screen
+      navigation.navigate("Login");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.screen}>
@@ -76,6 +91,13 @@ const ProfileScreen = () => {
               <Text style={styles.label}>Country:</Text>
               <Text style={styles.value}>{userData.country}</Text>
             </View>
+
+            <TouchableOpacity
+              style={styles.logoutButton}
+              onPress={handleLogout}
+            >
+              <Text style={styles.logoutButtonText}>Logout</Text>
+            </TouchableOpacity>
           </View>
         )}
       </View>
@@ -123,6 +145,18 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     marginTop: 10,
+  },
+  logoutButton: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: "red",
+    borderRadius: 5,
+  },
+  logoutButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
   },
 });
 
