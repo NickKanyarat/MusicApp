@@ -6,19 +6,19 @@ import {
   Image,
   StyleSheet,
   SafeAreaView,
-  Alert, // เพิ่ม Alert เข้ามา
+  Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { AntDesign } from "@expo/vector-icons";
-import Slider from "@react-native-community/slider";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Slider from "@react-native-community/slider";
 
 const MplayerScreen = ({ route }) => {
   const { track } = route.params;
   const [isPlaying, setIsPlaying] = useState(false);
-  const [sliderValue, setSliderValue] = useState(0);
   const navigation = useNavigation();
   const [accessToken, setAccessToken] = useState(null);
+  const [sliderValue, setSliderValue] = useState(0);
 
   useEffect(() => {
     const fetchAccessToken = async () => {
@@ -55,19 +55,27 @@ const MplayerScreen = ({ route }) => {
 
   const startPlayback = async () => {
     try {
-      const response = await fetch("https://api.spotify.com/v1/me/player/play", {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          uris: [track.uri],
-        }),
-      });
-  
+      const response = await fetch(
+        "https://api.spotify.com/v1/me/player/play",
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            uris: [track.uri],
+          }),
+        }
+      );
+
       if (response.ok) {
+        setIsPlaying(true);
         console.log("Playback started successfully.");
+      } else if (response.status === 401) {
+        console.log("Access token expired. Refreshing token...");
+        await refreshAccessToken();
+        await startPlayback();
       } else {
         console.error("Failed to start playback:", response.status);
         Alert.alert("Error", "Failed to start playback.");
@@ -77,18 +85,22 @@ const MplayerScreen = ({ route }) => {
       Alert.alert("Error", "Failed to start playback.");
     }
   };
-  
+
   const pausePlayback = async () => {
     try {
-      const response = await fetch("https://api.spotify.com/v1/me/player/pause", {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
-  
+      const response = await fetch(
+        "https://api.spotify.com/v1/me/player/pause",
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
       if (response.ok) {
+        setIsPlaying(false);
         console.log("Playback paused successfully.");
       } else {
         console.error("Failed to pause playback:", response.status);
@@ -97,6 +109,38 @@ const MplayerScreen = ({ route }) => {
     } catch (error) {
       console.error("Error pausing playback:", error);
       Alert.alert("Error", "Failed to pause playback.");
+    }
+  };
+
+  const refreshAccessToken = async () => {
+    try {
+      const refreshToken = await AsyncStorage.getItem("refreshToken");
+      const clientId = "YOUR_CLIENT_ID";
+      const clientSecret = "YOUR_CLIENT_SECRET";
+
+      const response = await fetch("https://accounts.spotify.com/api/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          grant_type: "refresh_token",
+          refresh_token: refreshToken,
+          client_id: clientId,
+          client_secret: clientSecret,
+        }).toString(),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to refresh access token");
+      }
+
+      const tokenData = await response.json();
+      await AsyncStorage.setItem("accessToken", tokenData.access_token);
+      setAccessToken(tokenData.access_token);
+    } catch (error) {
+      console.error("Error refreshing access token:", error);
+      throw error;
     }
   };
 
@@ -116,7 +160,10 @@ const MplayerScreen = ({ route }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.screen}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
           <AntDesign name="left" size={30} color="white" />
         </TouchableOpacity>
         <Text style={styles.title}>Music Player</Text>

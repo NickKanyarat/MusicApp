@@ -8,7 +8,7 @@ import {
   Image,
   ActivityIndicator,
   TouchableOpacity,
-  Alert, // เพิ่ม Alert เข้ามา
+  Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
@@ -27,14 +27,16 @@ const HomeScreen = () => {
           setAccessToken(token);
           fetchTopTracks(token);
           const interval = setInterval(() => {
-            fetchTopTracks(token);
+            refreshAccessTokenAndFetchTopTracks();
           }, 60000);
           return () => clearInterval(interval);
+        } else {
+          refreshAccessTokenAndFetchTopTracks();
         }
       } catch (error) {
         console.error("Error fetching data:", error);
         setLoading(false);
-        Alert.alert("Error", "Failed to fetch data."); // เพิ่มการแจ้งเตือนเมื่อเกิดข้อผิดพลาด
+        Alert.alert("Error", "Failed to fetch data.");
       }
     };
 
@@ -64,9 +66,55 @@ const HomeScreen = () => {
     } catch (error) {
       console.error("Error fetching data:", error);
       setLoading(false);
-      Alert.alert("Error", "Failed to fetch top tracks."); // เพิ่มการแจ้งเตือนเมื่อเกิดข้อผิดพลาด
+      Alert.alert("Error", "Failed to fetch top tracks.");
     }
   };
+
+  const refreshAccessToken = async () => {
+    try {
+      const refreshToken = await AsyncStorage.getItem("refreshToken");
+      const clientId = "1dc7e39c7d6245deaee8177099bcfd60";
+      const clientSecret = "ba10ac5222f94e1bb020bb8f38d1c860";
+
+      const response = await fetch(
+        "https://accounts.spotify.com/api/token",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            grant_type: "refresh_token",
+            refresh_token: refreshToken,
+            client_id: clientId,
+            client_secret: clientSecret,
+          }).toString(),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to refresh access token");
+      }
+
+      const tokenData = await response.json();
+      await AsyncStorage.setItem("accessToken", tokenData.access_token);
+      setAccessToken(tokenData.access_token);
+    } catch (error) {
+      console.error("Error refreshing access token:", error);
+      throw error;
+    }
+  };
+
+  const refreshAccessTokenAndFetchTopTracks = async () => {
+    try {
+      await refreshAccessToken();
+      const refreshedAccessToken = await AsyncStorage.getItem("accessToken");
+      await fetchTopTracks(refreshedAccessToken);
+    } catch (error) {
+      console.error("Error refreshing access token and fetching top tracks:", error);
+    }
+  };
+  
 
   const handleTrackPress = (track) => {
     navigation.navigate("Player", { track });
