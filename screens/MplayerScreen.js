@@ -21,6 +21,7 @@ const MplayerScreen = ({ route }) => {
   const [sliderValue, setSliderValue] = useState(0);
   const [songDuration, setSongDuration] = useState(0);
   const [songProgress, setSongProgress] = useState(0);
+  const [currentTrack, setCurrentTrack] = useState(track);
 
   useEffect(() => {
     const fetchAccessToken = async () => {
@@ -54,7 +55,8 @@ const MplayerScreen = ({ route }) => {
           setSongDuration(data.item.duration_ms);
           setSongProgress(data.progress_ms);
           setIsPlaying(data.is_playing);
-          setSliderValue(data.progress_ms); // Update slider value to match song progress
+          setSliderValue(data.progress_ms);
+          setCurrentTrack(data.item);
         } else if (response.status === 401) {
           console.log("Access token expired. Refreshing token...");
           await refreshAccessToken();
@@ -109,7 +111,7 @@ const MplayerScreen = ({ route }) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            uris: [track.uri],
+            uris: [currentTrack.uri],
           }),
         }
       );
@@ -189,12 +191,50 @@ const MplayerScreen = ({ route }) => {
     }
   };
 
+  const fetchRandomTrack = async () => {
+    try {
+      const response = await fetch(
+        "https://api.spotify.com/v1/me/player/recommendations?limit=1",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentTrack(data.tracks[0]);
+      } else {
+        console.error("Failed to fetch random track:", response.status);
+        Alert.alert("Error", "Failed to fetch random track.");
+      }
+    } catch (error) {
+      console.error("Error fetching random track:", error);
+      Alert.alert("Error", "Failed to fetch random track.");
+    }
+  };
+
   const playNextTrack = async () => {
-    // Add code to play the next track
+    try {
+      await fetchRandomTrack();
+      await startPlayback();
+    } catch (error) {
+      console.error("Error playing next track:", error);
+      Alert.alert("Error", "Failed to play next track.");
+    }
   };
 
   const playPreviousTrack = async () => {
-    // Add code to play the previous track
+    try {
+      await fetchRandomTrack();
+      await startPlayback();
+    } catch (error) {
+      console.error("Error playing previous track:", error);
+      Alert.alert("Error", "Failed to play previous track.");
+    }
   };
 
   const onSliderValueChange = async (value) => {
@@ -238,14 +278,14 @@ const MplayerScreen = ({ route }) => {
         <Text style={styles.title}>Music Player</Text>
         <View style={styles.trackImageContainer}>
           <Image
-            source={{ uri: track.album.images[0].url }}
+            source={{ uri: currentTrack.album.images[0].url }}
             style={styles.trackImage}
           />
         </View>
         <View style={styles.trackInfoContainer}>
-          <Text style={styles.trackName}>{track.name}</Text>
+          <Text style={styles.trackName}>{currentTrack.name}</Text>
           <Text style={styles.trackArtists}>
-            {track.artists.map((artist) => artist.name).join(", ")}
+            {currentTrack.artists.map((artist) => artist.name).join(", ")}
           </Text>
         </View>
         <View style={styles.sliderContainer}>
