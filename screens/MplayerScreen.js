@@ -19,6 +19,8 @@ const MplayerScreen = ({ route }) => {
   const navigation = useNavigation();
   const [accessToken, setAccessToken] = useState(null);
   const [sliderValue, setSliderValue] = useState(0);
+  const [songDuration, setSongDuration] = useState(0);
+  const [songProgress, setSongProgress] = useState(0);
 
   useEffect(() => {
     const fetchAccessToken = async () => {
@@ -32,6 +34,49 @@ const MplayerScreen = ({ route }) => {
 
     fetchAccessToken();
   }, []);
+
+  useEffect(() => {
+    const fetchCurrentPlayback = async () => {
+      try {
+        const response = await fetch(
+          "https://api.spotify.com/v1/me/player/currently-playing",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setSongDuration(data.item.duration_ms);
+          setSongProgress(data.progress_ms);
+          setIsPlaying(data.is_playing);
+          setSliderValue(data.progress_ms); // Update slider value to match song progress
+        } else if (response.status === 401) {
+          console.log("Access token expired. Refreshing token...");
+          await refreshAccessToken();
+          await fetchCurrentPlayback();
+        } else {
+          console.error("Failed to fetch current playback:", response.status);
+          Alert.alert("Error", "Failed to fetch current playback.");
+        }
+      } catch (error) {
+        console.error("Error fetching current playback:", error);
+        Alert.alert("Error", "Failed to fetch current playback.");
+      }
+    };
+
+    if (isPlaying) {
+      const interval = setInterval(() => {
+        fetchCurrentPlayback();
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [isPlaying, accessToken]);
 
   const togglePlayback = async () => {
     if (!accessToken) {
@@ -115,8 +160,8 @@ const MplayerScreen = ({ route }) => {
   const refreshAccessToken = async () => {
     try {
       const refreshToken = await AsyncStorage.getItem("refreshToken");
-      const clientId = "1dc7e39c7d6245deaee8177099bcfd60";
-      const clientSecret = "ba10ac5222f94e1bb020bb8f38d1c860";
+      const clientId = "c082e853dede4ab7a5dd520df4ca3d44";
+      const clientSecret = "46b89c90048b48b89242a299f084e681";
 
       const response = await fetch("https://accounts.spotify.com/api/token", {
         method: "POST",
@@ -154,7 +199,31 @@ const MplayerScreen = ({ route }) => {
 
   const onSliderValueChange = async (value) => {
     setSliderValue(value);
-    // Add code to control the position of the track
+    if (isPlaying) {
+      try {
+        const response = await fetch(
+          "https://api.spotify.com/v1/me/player/seek",
+          {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              position_ms: value,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          console.error("Failed to control track position:", response.status);
+          Alert.alert("Error", "Failed to control track position.");
+        }
+      } catch (error) {
+        console.error("Error controlling track position:", error);
+        Alert.alert("Error", "Failed to control track position.");
+      }
+    }
   };
 
   return (
@@ -183,7 +252,7 @@ const MplayerScreen = ({ route }) => {
           <Slider
             style={{ width: "100%", alignSelf: "center", marginTop: 20 }}
             minimumValue={0}
-            maximumValue={100}
+            maximumValue={songDuration}
             value={sliderValue}
             onValueChange={onSliderValueChange}
             minimumTrackTintColor="white"
@@ -192,7 +261,7 @@ const MplayerScreen = ({ route }) => {
         </View>
         <View style={styles.controlsContainer}>
           <TouchableOpacity onPress={playPreviousTrack}>
-            <AntDesign name="banckward" size={45} color="white" />
+            <AntDesign name="banckward" size={35} color="white" />
           </TouchableOpacity>
           <TouchableOpacity onPress={togglePlayback}>
             <AntDesign
@@ -202,7 +271,7 @@ const MplayerScreen = ({ route }) => {
             />
           </TouchableOpacity>
           <TouchableOpacity onPress={playNextTrack}>
-            <AntDesign name="forward" size={45} color="white" />
+            <AntDesign name="forward" size={35} color="white" />
           </TouchableOpacity>
         </View>
       </View>
@@ -250,13 +319,13 @@ const styles = StyleSheet.create({
   },
   trackName: {
     color: "white",
-    fontSize: 20,
+    fontSize: 25,
     fontWeight: "600",
-    marginBottom: 15,
+    marginBottom: 10,
   },
   trackArtists: {
     color: "lightgray",
-    fontSize: 15,
+    fontSize: 20,
     height: 50,
   },
   sliderContainer: {
