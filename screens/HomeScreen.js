@@ -46,7 +46,7 @@ const HomeScreen = () => {
   const fetchTopTracks = async (token) => {
     try {
       const response = await fetch(
-        "https://api.spotify.com/v1/me/top/tracks?limit=30",
+        "https://api.spotify.com/v1/me/top/tracks?limit=30&time_range=long_term",
         {
           method: "GET",
           headers: {
@@ -55,11 +55,11 @@ const HomeScreen = () => {
           },
         }
       );
-
+  
       if (!response.ok) {
         throw new Error("Failed to fetch top tracks");
       }
-
+  
       const data = await response.json();
       setTopTracks(data.items);
       setLoading(false);
@@ -73,8 +73,8 @@ const HomeScreen = () => {
   const refreshAccessToken = async () => {
     try {
       const refreshToken = await AsyncStorage.getItem("refreshToken");
-      const clientId = "1dc7e39c7d6245deaee8177099bcfd60";
-      const clientSecret = "ba10ac5222f94e1bb020bb8f38d1c860";
+      const clientId = "c082e853dede4ab7a5dd520df4ca3d44";
+      const clientSecret = "46b89c90048b48b89242a299f084e681";
 
       const response = await fetch(
         "https://accounts.spotify.com/api/token",
@@ -178,8 +178,8 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   trackImage: {
-    width: 50,
-    height: 50,
+    width: 55,
+    height: 55,
     marginRight: 10,
     borderRadius: 5,
   },
