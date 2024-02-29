@@ -115,8 +115,8 @@ const MplayerScreen = ({ route }) => {
   const refreshAccessToken = async () => {
     try {
       const refreshToken = await AsyncStorage.getItem("refreshToken");
-      const clientId = "YOUR_CLIENT_ID";
-      const clientSecret = "YOUR_CLIENT_SECRET";
+      const clientId = "1dc7e39c7d6245deaee8177099bcfd60";
+      const clientSecret = "ba10ac5222f94e1bb020bb8f38d1c860";
 
       const response = await fetch("https://accounts.spotify.com/api/token", {
         method: "POST",
