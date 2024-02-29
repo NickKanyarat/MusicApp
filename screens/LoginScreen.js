@@ -15,7 +15,7 @@ const LoginScreen = () => {
 
   const [request, response, promptAsync] = useAuthRequest(
     {
-      clientId: "1dc7e39c7d6245deaee8177099bcfd60",
+      clientId: "c082e853dede4ab7a5dd520df4ca3d44",
       scopes: [
         "user-read-email",
         "playlist-modify-public",
@@ -51,8 +51,8 @@ const LoginScreen = () => {
                 grant_type: "authorization_code",
                 code: code,
                 redirect_uri: "exp://localhost:8081/--/spotify-auth-callback",
-                client_id: "1dc7e39c7d6245deaee8177099bcfd60",
-                client_secret: "ba10ac5222f94e1bb020bb8f38d1c860",
+                client_id: "c082e853dede4ab7a5dd520df4ca3d44",
+                client_secret: "46b89c90048b48b89242a299f084e681",
               }).toString(),
             }
           );
@@ -110,8 +110,8 @@ const LoginScreen = () => {
           body: new URLSearchParams({
             grant_type: "refresh_token",
             refresh_token: refreshToken, // ใช้ refresh token เพื่อขอ access token ใหม่
-            client_id: "1dc7e39c7d6245deaee8177099bcfd60",
-            client_secret: "ba10ac5222f94e1bb020bb8f38d1c860",
+            client_id: "c082e853dede4ab7a5dd520df4ca3d44",
+            client_secret: "46b89c90048b48b89242a299f084e681",
           }).toString(),
         }
       );
