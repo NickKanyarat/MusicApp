@@ -8,19 +8,19 @@ import {
   SafeAreaView,
   Alert,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { AntDesign } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Slider from "@react-native-community/slider";
 
-const MplayerScreen = ({ route }) => {
-  const { track } = route.params;
-  const [isPlaying, setIsPlaying] = useState(false);
+const MplayerScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute();
+  const { track } = route.params;
   const [accessToken, setAccessToken] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
   const [songDuration, setSongDuration] = useState(0);
-  const [songProgress, setSongProgress] = useState(0);
   const [currentTrack, setCurrentTrack] = useState(track);
 
   useEffect(() => {
@@ -53,7 +53,6 @@ const MplayerScreen = ({ route }) => {
         if (response.ok) {
           const data = await response.json();
           setSongDuration(data.item.duration_ms);
-          setSongProgress(data.progress_ms);
           setIsPlaying(data.is_playing);
           setSliderValue(data.progress_ms);
           setCurrentTrack(data.item);
@@ -71,14 +70,12 @@ const MplayerScreen = ({ route }) => {
       }
     };
 
-    if (isPlaying) {
-      const interval = setInterval(() => {
-        fetchCurrentPlayback();
-      }, 1000);
+    const interval = setInterval(() => {
+      fetchCurrentPlayback();
+    }, 1000);
 
-      return () => clearInterval(interval);
-    }
-  }, [isPlaying, accessToken]);
+    return () => clearInterval(interval);
+  }, [accessToken]);
 
   const togglePlayback = async () => {
     if (!accessToken) {
@@ -88,10 +85,8 @@ const MplayerScreen = ({ route }) => {
 
     try {
       if (isPlaying) {
-        setIsPlaying(false);
         await pausePlayback();
       } else {
-        setIsPlaying(true);
         await startPlayback();
       }
     } catch (error) {
@@ -228,13 +223,8 @@ const MplayerScreen = ({ route }) => {
   };
 
   const playPreviousTrack = async () => {
-    try {
-      await fetchRandomTrack();
-      await startPlayback();
-    } catch (error) {
-      console.error("Error playing previous track:", error);
-      Alert.alert("Error", "Failed to play previous track.");
-    }
+    // Implement logic to play previous track
+    // This function will be called when the user presses the previous track button
   };
 
   const onSliderValueChange = async (value) => {
@@ -378,6 +368,7 @@ const styles = StyleSheet.create({
     width: "85%",
     alignSelf: "center",
     position: "relative",
+    alignItems: "center",
   },
 });
 
