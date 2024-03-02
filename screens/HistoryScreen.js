@@ -1,14 +1,99 @@
-import { StyleSheet, Text, View } from "react-native";
-import React from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  Alert,
+  FlatList,
+  Image,
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const HistoryScreen = () => {
+  const navigation = useNavigation();
+  const [accessToken, setAccessToken] = useState(null);
+  const [recentlyPlayed, setRecentlyPlayed] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = await AsyncStorage.getItem("accessToken");
+        if (token) {
+          setAccessToken(token);
+          fetchRecentlyPlayed(token);
+        } else {
+          navigation.navigate("Login");
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setLoading(false);
+        Alert.alert("Error", "Failed to fetch data.");
+      }
+    };
+
+    fetchData();
+  }, [navigation]);
+
+  const fetchRecentlyPlayed = async (token) => {
+    try {
+      const response = await fetch(
+        "https://api.spotify.com/v1/me/player/recently-played",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        // Filter out duplicate tracks
+        const uniqueTracks = [];
+        const trackIds = new Set();
+        for (const item of data.items) {
+          if (!trackIds.has(item.track.id)) {
+            uniqueTracks.push(item);
+            trackIds.add(item.track.id);
+          }
+          if (uniqueTracks.length === 5) break;
+        }
+        setRecentlyPlayed(uniqueTracks);
+      } else {
+        console.error("Failed to fetch recently played:", response.status);
+      }
+    } catch (error) {
+      console.error("Error fetching recently played:", error);
+    }
+  };
+
+  const renderItem = ({ item }) => (
+    <View style={styles.songItem}>
+      <Image
+        source={{ uri: item.track.album.images[0].url }}
+        style={styles.albumImage}
+      />
+      <View style={styles.songDetails}>
+        <Text style={styles.songName}>{item.track.name}</Text>
+        <Text style={styles.artistName}>{item.track.artists[0].name}</Text>
+      </View>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.screen}>
         <Text style={styles.title}>History</Text>
-        <View style={styles.content}>
-            <Text style={{ color: "white" }}>Record</Text>
+        <FlatList
+          data={recentlyPlayed}
+          renderItem={renderItem}
+          keyExtractor={(item, index) => index.toString()}
+          contentContainerStyle={styles.content}
+        />
+        <View style={styles.recentContainer}>
+          <Text style={styles.title}>Recent song humming</Text>
         </View>
       </View>
     </SafeAreaView>
@@ -18,24 +103,48 @@ const HistoryScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'black',
+    backgroundColor: "black",
   },
   screen: {
     flex: 1,
-    justifyContent: 'center',
     padding: 20,
+    height: "50%",
   },
   title: {
-    color: 'white',
+    color: "white",
     fontSize: 30,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 20,
-    textAlign: 'center',
   },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+
+  songItem: {
+    flexDirection: "row",
+    marginBottom: 20,
+    width: "100%",
+  },
+  albumImage: {
+    width: 55,
+    height: 55,
+    marginRight: 10,
+    borderRadius: 5,
+  },
+  songDetails: {
+    marginLeft: 0,
+  },
+  songName: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  artistName: {
+    color: "gray",
+    fontSize: 14,
+  },
+  recentContainer: {
+    flexGrow: 1,
+    alignItems: "flex-start",
+    height: "50%",
+    paddingTop: 20,
   },
 });
 
