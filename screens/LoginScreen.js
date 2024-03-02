@@ -1,6 +1,13 @@
 import * as React from "react";
 import { useAuthRequest } from "expo-auth-session";
-import { Button, StyleSheet, Text, SafeAreaView, View, Alert } from "react-native";
+import {
+  Button,
+  StyleSheet,
+  Text,
+  SafeAreaView,
+  View,
+  Alert,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 
@@ -38,7 +45,7 @@ const LoginScreen = () => {
       if (response?.type === "success") {
         const { code } = response.params;
         console.log("Received code:", code);
-  
+
         try {
           const tokenResponse = await fetch(
             "https://accounts.spotify.com/api/token",
@@ -56,38 +63,44 @@ const LoginScreen = () => {
               }).toString(),
             }
           );
-  
+
           const tokenData = await tokenResponse.json();
           console.log("Token data:", tokenData);
-  
+
           const accessToken = tokenData.access_token;
           const refreshToken = tokenData.refresh_token; // เก็บ refresh token ไว้
-  
+
           if (accessToken && refreshToken) {
             console.log("Access token:", accessToken);
             console.log("Refresh token:", refreshToken);
-  
+
             await AsyncStorage.setItem("accessToken", accessToken);
             await AsyncStorage.setItem("refreshToken", refreshToken);
-  
+
             navigation.navigate("Main", { accessToken: accessToken });
-  
+
             // เรียกใช้ฟังก์ชัน setupTokenRefresh เพื่อตั้งเวลาในการ refresh token
             setupTokenRefresh();
           } else {
             console.error("Access token or refresh token is undefined or null");
-            Alert.alert("Error", "Access token or refresh token is undefined or null");
+            Alert.alert(
+              "Error",
+              "Access token or refresh token is undefined or null"
+            );
           }
         } catch (error) {
           console.error(
             "Error exchanging authorization code for access token:",
             error
           );
-          Alert.alert("Error", "Failed to exchange authorization code for access token");
+          Alert.alert(
+            "Error",
+            "Failed to exchange authorization code for access token"
+          );
         }
       }
     };
-  
+
     handleResponse();
   }, [response, navigation]);
 
