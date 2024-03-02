@@ -26,12 +26,8 @@ const HomeScreen = () => {
         if (token) {
           setAccessToken(token);
           fetchTopTracks(token);
-          const interval = setInterval(() => {
-            refreshAccessTokenAndFetchTopTracks();
-          }, 60000);
-          return () => clearInterval(interval);
         } else {
-          refreshAccessTokenAndFetchTopTracks();
+          navigation.navigate("Login");
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -41,7 +37,7 @@ const HomeScreen = () => {
     };
 
     fetchData();
-  }, []);
+  }, [navigation]);
 
   const fetchTopTracks = async (token) => {
     try {
@@ -55,11 +51,11 @@ const HomeScreen = () => {
           },
         }
       );
-  
+
       if (!response.ok) {
         throw new Error("Failed to fetch top tracks");
       }
-  
+
       const data = await response.json();
       setTopTracks(data.items);
       setLoading(false);
@@ -70,60 +66,39 @@ const HomeScreen = () => {
     }
   };
 
-  const refreshAccessToken = async () => {
+  const handleTrackPress = async (track) => {
     try {
-      const refreshToken = await AsyncStorage.getItem("refreshToken");
-      const clientId = "c082e853dede4ab7a5dd520df4ca3d44";
-      const clientSecret = "46b89c90048b48b89242a299f084e681";
-
       const response = await fetch(
-        "https://accounts.spotify.com/api/token",
+        "https://api.spotify.com/v1/me/player/play",
         {
-          method: "POST",
+          method: "PUT",
           headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
           },
-          body: new URLSearchParams({
-            grant_type: "refresh_token",
-            refresh_token: refreshToken,
-            client_id: clientId,
-            client_secret: clientSecret,
-          }).toString(),
+          body: JSON.stringify({
+            uris: [track.uri],
+          }),
         }
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to refresh access token");
+      if (response.ok) {
+        console.log("Successfully started playback of the selected track.");
+        navigation.navigate("Player", { track }); // นำข้อมูลเพลงไปแสดงที่หน้า MPlayerScreen
+      } else {
+        console.error("Failed to start playback:", response.status);
+        Alert.alert("Error", "Failed to start playback.");
       }
-
-      const tokenData = await response.json();
-      await AsyncStorage.setItem("accessToken", tokenData.access_token);
-      setAccessToken(tokenData.access_token);
     } catch (error) {
-      console.error("Error refreshing access token:", error);
-      throw error;
+      console.error("Error starting playback:", error);
+      Alert.alert("Error", "Failed to start playback.");
     }
-  };
-
-  const refreshAccessTokenAndFetchTopTracks = async () => {
-    try {
-      await refreshAccessToken();
-      const refreshedAccessToken = await AsyncStorage.getItem("accessToken");
-      await fetchTopTracks(refreshedAccessToken);
-    } catch (error) {
-      console.error("Error refreshing access token and fetching top tracks:", error);
-    }
-  };
-  
-
-  const handleTrackPress = (track) => {
-    navigation.navigate("Player", { track });
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.screen}>
-        <Text style={styles.title}>Top Tracks</Text>
+        <Text style={styles.title}>Top Tracks for You</Text>
         {loading ? (
           <ActivityIndicator size="large" color="#ffffff" />
         ) : (
