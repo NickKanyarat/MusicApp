@@ -68,7 +68,7 @@ const ProfileScreen = () => {
           <ActivityIndicator size="large" color="#ffffff" />
         ) : (
           <View style={styles.profileInfo}>
-            <View style={styles.labelContainer}>
+            <View style={styles.imageContainer}>
               <Image
                 source={{
                   uri:
@@ -77,27 +77,33 @@ const ProfileScreen = () => {
                 style={styles.profileImage}
               />
             </View>
-            <View style={styles.labelContainer}>
-              <Text style={styles.label}>Name:</Text>
-              <Text style={styles.value}>{userData.display_name}</Text>
+
+            <View style={styles.infoContainer}>
+              <View style={styles.labelContainer}>
+                <Text style={styles.label}>Name :</Text>
+              </View>
+              <View style={styles.valueContainer}>
+                <Text style={styles.value}>{userData.display_name}</Text>
+              </View>
             </View>
 
-            <View style={styles.labelContainer}>
-              <Text style={styles.label}>Email:</Text>
-              <Text style={styles.value}>{userData.email}</Text>
+            <View style={styles.infoContainer}>
+              <View style={styles.labelContainer}>
+                <Text style={styles.label}>Email :</Text>
+              </View>
+              <View style={styles.valueContainer}>
+                <Text style={styles.value}>{userData.email}</Text>
+              </View>
             </View>
 
-            <View style={styles.labelContainer}>
-              <Text style={styles.label}>Country:</Text>
-              <Text style={styles.value}>{userData.country}</Text>
+            <View style={styles.logoutContainer}>
+              <TouchableOpacity
+                style={styles.logoutButton}
+                onPress={handleLogout}
+              >
+                <Text style={styles.logoutButtonText}>Logout</Text>
+              </TouchableOpacity>
             </View>
-
-            <TouchableOpacity
-              style={styles.logoutButton}
-              onPress={handleLogout}
-            >
-              <Text style={styles.logoutButtonText}>Logout</Text>
-            </TouchableOpacity>
           </View>
         )}
       </View>
@@ -113,27 +119,38 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     padding: 20,
+    marginTop: 20,
   },
   title: {
     color: "white",
     fontSize: 30,
     fontWeight: "bold",
-    marginBottom: 20,
     textAlign: "center",
   },
   profileInfo: {
+    paddingTop: 30,
+  },
+  imageContainer: {
     alignItems: "center",
+    marginBottom: 30,
+  },
+  infoContainer: {
+    flexDirection: "row",
+    marginBottom: 15,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
   labelContainer: {
-    alignItems: "center",
-    flexDirection: "row",
-    marginBottom: 20,
+    alignItems: "flex-start",
   },
   label: {
     color: "lightgray",
     fontSize: 18,
-    marginRight: 5,
-    fontWeight: "600",
+    marginRight: 10,
+    fontWeight: "bold",
+  },
+  valueContainer: {
+    alignItems: "flex-start",
   },
   value: {
     color: "white",
@@ -141,16 +158,21 @@ const styles = StyleSheet.create({
     fontWeight: "normal",
   },
   profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
     marginTop: 10,
+    resizeMode: "cover",
+  },
+  logoutContainer: {
+    alignItems: "center",
   },
   logoutButton: {
     marginTop: 20,
-    padding: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 50,
     backgroundColor: "red",
-    borderRadius: 5,
+    borderRadius: 25,
   },
   logoutButtonText: {
     color: "white",
