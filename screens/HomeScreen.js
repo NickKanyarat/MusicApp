@@ -98,7 +98,7 @@ const HomeScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.screen}>
-        <Text style={styles.title}>Top Tracks for You</Text>
+        <Text style={styles.title}>Tracks for You</Text>
         {loading ? (
           <ActivityIndicator size="large" color="#ffffff" />
         ) : (
@@ -137,6 +137,7 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     padding: 20,
+    marginTop: 20,
   },
   title: {
     color: "white",
