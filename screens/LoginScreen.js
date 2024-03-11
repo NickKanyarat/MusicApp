@@ -104,7 +104,6 @@ const LoginScreen = () => {
     handleResponse();
   }, [response, navigation]);
 
-  // 3. การใช้ refresh token เพื่อขอ access token ใหม่
   const refreshToken = async () => {
     try {
       const refreshToken = await AsyncStorage.getItem("refreshToken");
@@ -122,7 +121,7 @@ const LoginScreen = () => {
           },
           body: new URLSearchParams({
             grant_type: "refresh_token",
-            refresh_token: refreshToken, // ใช้ refresh token เพื่อขอ access token ใหม่
+            refresh_token: refreshToken,
             client_id: "c082e853dede4ab7a5dd520df4ca3d44",
             client_secret: "46b89c90048b48b89242a299f084e681",
           }).toString(),
@@ -144,9 +143,8 @@ const LoginScreen = () => {
     }
   };
 
-  // ฟังก์ชัน setupTokenRefresh เพื่อตั้งเวลาในการ refresh token
   const setupTokenRefresh = () => {
-    const refreshInterval = setInterval(refreshToken, 3600000); // ตั้งเวลาให้ refresh token ทุกชั่วโมง
+    const refreshInterval = setInterval(refreshToken, 3600000);
     return () => clearInterval(refreshInterval);
   };
 
