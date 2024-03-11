@@ -1,40 +1,44 @@
-import { useNavigation } from "@react-navigation/native";
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  Alert,
-  FlatList,
-  Image,
-} from "react-native";
+import { View, Text, StyleSheet, SafeAreaView, Alert, FlatList, Image } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const HistoryScreen = () => {
-  const navigation = useNavigation();
-  const [accessToken, setAccessToken] = useState(null);
   const [recentlyPlayed, setRecentlyPlayed] = useState([]);
+  const [recentRecording, setRecentRecording] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const token = await AsyncStorage.getItem("accessToken");
         if (token) {
-          setAccessToken(token);
           fetchRecentlyPlayed(token);
         } else {
           navigation.navigate("Login");
         }
       } catch (error) {
         console.error("Error fetching data:", error);
-        setLoading(false);
         Alert.alert("Error", "Failed to fetch data.");
       }
     };
 
     fetchData();
-  }, [navigation]);
+  }, []);
+
+  useEffect(() => {
+    const fetchRecentRecording = async () => {
+      try {
+        const uri = await AsyncStorage.getItem("recentRecording");
+        if (uri) {
+          setRecentRecording(uri);
+        }
+      } catch (error) {
+        console.error("Error fetching recent recording:", error);
+        Alert.alert("Error", "Failed to fetch recent recording.");
+      }
+    };
+  
+    fetchRecentRecording();
+  }, []);  
 
   const fetchRecentlyPlayed = async (token) => {
     try {
@@ -50,7 +54,6 @@ const HistoryScreen = () => {
 
       if (response.ok) {
         const data = await response.json();
-        // Filter out duplicate tracks
         const uniqueTracks = [];
         const trackIds = new Set();
         for (const item of data.items) {
@@ -94,6 +97,9 @@ const HistoryScreen = () => {
         />
         <View style={styles.recentContainer}>
           <Text style={styles.title}>Recent song humming</Text>
+          {recentRecording && (
+            <Image source={{ uri: recentRecording }} style={styles.albumImage} />
+          )}
         </View>
       </View>
     </SafeAreaView>
@@ -108,6 +114,7 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     padding: 20,
+    marginTop: 20,
     height: "50%",
   },
   title: {
@@ -116,7 +123,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 20,
   },
-
   songItem: {
     flexDirection: "row",
     marginBottom: 20,
